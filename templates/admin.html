@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Quản Lí Thư Viện</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f7f6;
+            padding: 20px;
+        }
+
+        .container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-custom {
+            margin: 5px;
+            transition: background 0.3s;
+        }
+
+        .btn-custom:hover {
+            background: #0062cc;
+        }
+
+        .modal-header {
+            background: #007bff;
+            color: #fff;
+        }
+
+        .modal-footer .btn {
+            transition: background 0.3s;
+        }
+
+        .modal-footer .btn:hover {
+            background: #0056b3;
+        }
+
+        .status-btn {
+            width: 100%;
+            border: none;
+            padding: 10px;
+            color: #fff;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .status-btn.borrowed {
+            background: #28a745;
+        }
+
+        .status-btn.available {
+            background: #dc3545;
+        }
+
+        .action-btn {
+            margin: 0 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center">Quản lý thư viện - Admin</h1>
+        <div class="text-right mb-3">
+            <button class="btn btn-primary btn-custom" data-toggle="modal" data-target="#addBookModal">Thêm sách</button>
+            <button class="btn btn-success btn-custom" data-toggle="modal" data-target="#importBooksModal">Nhập sách từ Excel</button>
+            <button class="btn btn-danger btn-custom" onclick="logout()">Đăng xuất</button>
+        </div>
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>STT</th>
+                    <th>Tên sách</th>
+                    <th>Tác giả</th>
+                    <th>Năm xuất bản</th>
+                    <th>Mã sách</th>
+                    <th>Trạng thái</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody id="booksTableBody">
+                <!-- Rows will be populated by JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Add Book Modal -->
+    <div class="modal fade" id="addBookModal" tabindex="-1" role="dialog" aria-labelledby="addBookModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addBookModalLabel">Thêm sách</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="addBookForm">
+                        <div class="form-group">
+                            <label for="book_title">Tên sách</label>
+                            <input type="text" class="form-control" id="book_title" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="book_author">Tác giả</label>
+                            <input type="text" class="form-control" id="book_author" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="book_year">Năm xuất bản</label>
+                            <input type="number" class="form-control" id="book_year" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="book_id">Mã sách</label>
+                            <input type="text" class="form-control" id="book_id" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Thêm sách</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Books Modal -->
+    <div class="modal fade" id="importBooksModal" tabindex="-1" role="dialog" aria-labelledby="importBooksModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="importBooksModalLabel">Nhập sách từ Excel</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="importBooksForm" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="file">Chọn tệp Excel</label>
+                            <input type="file" class="form-control" id="file" name="file" accept=".xlsx, .xls" required>
+                        </div>
+                        <button type="submit" class="btn btn-success">Nhập sách</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Borrower Info Modal -->
+    <div class="modal fade" id="borrowerInfoModal" tabindex="-1" role="dialog" aria-labelledby="borrowerInfoModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="borrowerInfoModalLabel">Thông tin người mượn sách</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Tên người mượn:</strong> <span id="borrower_name"></span></p>
+                    <p><strong>Lớp:</strong> <span id="borrower_class"></span></p>
+                    <p><strong>Ngày mượn:</strong> <span id="borrow_date"></span></p>
+                    <p><strong>Tiết mượn:</strong> <span id="borrow_period"></span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            loadBooks();
+
+            $('#addBookForm').on('submit', function(event) {
+                event.preventDefault();
+                addBook();
+            });
+
+            $('#importBooksForm').on('submit', function(event) {
+                event.preventDefault();
+                importBooks();
+            });
+        });
+
+        function loadBooks() {
+            $.get('/api/books', function(data) {
+                const tbody = $('#booksTableBody');
+                tbody.empty();
+                data.forEach((book, index) => {
+                    const statusClass = book.borrowed ? 'borrowed' : 'available';
+                    const statusText = book.borrowed ? 'Đã mượn' : 'Chưa mượn';
+                    const row = `<tr>
+                        <td>${index + 1}</td>
+                        <td>${book.title}</td>
+                        <td>${book.author}</td>
+                        <td>${book.year}</td>
+                        <td>${book.book_id}</td>
+                        <td><button class="status-btn ${statusClass}" onclick="showBorrowerInfo(${index})">${statusText}</button></td>
+                        <td>
+                            <button class="btn btn-danger btn-sm action-btn" onclick="deleteBook('${book.book_id}')">Xóa</button>
+                        </td>
+                    </tr>`;
+                    tbody.append(row);
+                });
+            });
+        }
+
+        function addBook() {
+            const title = $('#book_title').val();
+            const author = $('#book_author').val();
+            const year = $('#book_year').val();
+            const bookId = $('#book_id').val();
+
+            $.ajax({
+                url: '/api/books',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    title: title,
+                    author: author,
+                    year: year,
+                    book_id: bookId,
+                    borrowed: false
+                }),
+                success: function(response) {
+                    $('#addBookModal').modal('hide');
+                    $('#addBookForm')[0].reset();
+                    loadBooks();
+                    alert(response.message);
+                },
+                error: function(error) {
+                    alert('Error adding book.');
+                }
+            });
+        }
+
+        function importBooks() {
+            const formData = new FormData($('#importBooksForm')[0]);
+
+            $.ajax({
+                url: '/api/import_books',
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function(response) {
+                    $('#importBooksModal').modal('hide');
+                    $('#importBooksForm')[0].reset();
+                    loadBooks();
+                    alert(response.message);
+                },
+                error: function(error) {
+                    alert('Error importing books.');
+                }
+            });
+        }
+
+        function deleteBook(bookId) {
+            if (confirm('Bạn có chắc chắn muốn xóa cuốn sách này không?')) {
+                $.ajax({
+                    url: `/api/books/${bookId}`,
+                    type: 'DELETE',
+                    success: function(response) {
+                        loadBooks();
+                        alert(response.message);
+                    },
+                    error: function(error) {
+                        alert('Error deleting book.');
+                    }
+                });
+            }
+        }
+
+        function showBorrowerInfo(index) {
+            $.get('/api/books', function(data) {
+                const book = data[index];
+                if (book.borrowed) {
+                    $.get('/api/transaction_log', function(transactionLog) {
+                        const transaction = transactionLog.find(t => t.book_id === book.book_id && t.action === 'borrow');
+                        if (transaction) {
+                            $('#borrower_name').text(transaction.borrower_name);
+                            $('#borrower_class').text(transaction.borrower_class);
+                            $('#borrow_date').text(transaction.borrow_date);
+                            $('#borrow_period').text(transaction.borrow_period);
+                            $('#borrowerInfoModal').modal('show');
+                        }
+                    });
+                }
+            });
+        }
+
+        function logout() {
+            window.location.href = '/logout';
+        }
+    </script>
+</body>
+</html>

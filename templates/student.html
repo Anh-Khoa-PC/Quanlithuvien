@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Học Sinh - Quản Lí Thư Viện</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f7f6;
+            padding: 20px;
+        }
+
+        .container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-custom {
+            margin: 5px;
+            transition: background 0.3s;
+        }
+
+        .btn-custom:hover {
+            background: #0062cc;
+        }
+
+        .modal-header {
+            background: #007bff;
+            color: #fff;
+        }
+
+        .modal-footer .btn {
+            transition: background 0.3s;
+        }
+
+        .modal-footer .btn:hover {
+            background: #0056b3;
+        }
+
+        .status-btn {
+            width: 100%;
+            border: none;
+            padding: 10px;
+            color: #fff;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .status-btn.borrowed {
+            background: #28a745;
+        }
+
+        .status-btn.available {
+            background: #dc3545;
+        }
+
+        .action-btn {
+            margin: 0 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center">Quản lý thư viện - Học sinh</h1>
+        <div class="text-right mb-3">
+            <button class="btn btn-primary btn-custom" data-toggle="modal" data-target="#borrowBookModal">Mượn sách</button>
+            <button class="btn btn-warning btn-custom" data-toggle="modal" data-target="#returnBookModal">Trả sách</button>
+            <button class="btn btn-danger btn-custom" onclick="logout()">Đăng xuất</button>
+        </div>
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>STT</th>
+                    <th>Tên sách</th>
+                    <th>Tác giả</th>
+                    <th>Năm xuất bản</th>
+                    <th>Mã sách</th>
+                    <th>Trạng thái</th>
+                </tr>
+            </thead>
+            <tbody id="booksTableBody">
+                <!-- Rows will be populated by JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Borrow Book Modal -->
+    <div class="modal fade" id="borrowBookModal" tabindex="-1" role="dialog" aria-labelledby="borrowBookModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="borrowBookModalLabel">Mượn sách</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="borrowBookForm">
+                        <div class="form-group">
+                            <label for="borrower_name">Tên người mượn</label>
+                            <input type="text" class="form-control" id="borrower_name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="borrower_class">Lớp</label>
+                            <input type="text" class="form-control" id="borrower_class" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="borrow_date">Ngày lấy sách</label>
+                            <input type="date" class="form-control" id="borrow_date" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="borrow_period">Tiết học</label>
+                            <select class="form-control" id="borrow_period" required>
+                                <option value="1">Tiết 1</option>
+                                <option value="2">Tiết 2</option>
+                                <option value="3">Tiết 3</option>
+                                <option value="4">Tiết 4</option>
+                                <option value="5">Tiết 5</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="book_index">Số thứ tự cuốn sách</label>
+                            <input type="number" class="form-control" id="book_index" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Mượn sách</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Return Book Modal -->
+    <div class="modal fade" id="returnBookModal" tabindex="-1" role="dialog" aria-labelledby="returnBookModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="returnBookModalLabel">Trả sách</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="returnBookForm">
+                        <div class="form-group">
+                            <label for="returner_name">Tên người trả</label>
+                            <input type="text" class="form-control" id="returner_name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="return_book_id">Mã sách</label>
+                            <input type="text" class="form-control" id="return_book_id" required>
+                        </div>
+                        <button type="submit" class="btn btn-warning">Trả sách</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            loadBooks();
+
+            $('#borrowBookForm').on('submit', function(event) {
+                event.preventDefault();
+                borrowBook();
+            });
+
+            $('#returnBookForm').on('submit', function(event) {
+                event.preventDefault();
+                returnBook();
+            });
+        });
+
+        function loadBooks() {
+            $.get('/api/books', function(data) {
+                const tbody = $('#booksTableBody');
+                tbody.empty();
+                data.forEach((book, index) => {
+                    const statusClass = book.borrowed ? 'borrowed' : 'available';
+                    const statusText = book.borrowed ? 'Đã mượn' : 'Chưa mượn';
+                    const row = `<tr>
+                        <td>${index + 1}</td>
+                        <td>${book.title}</td>
+                        <td>${book.author}</td>
+                        <td>${book.year}</td>
+                        <td>${book.book_id}</td>
+                        <td><button class="status-btn ${statusClass}">${statusText}</button></td>
+                    </tr>`;
+                    tbody.append(row);
+                });
+            });
+        }
+
+        function borrowBook() {
+            const bookIndex = $('#book_index').val() - 1;
+            const borrowerName = $('#borrower_name').val();
+            const borrowerClass = $('#borrower_class').val();
+            const borrowDate = $('#borrow_date').val();
+            const borrowPeriod = $('#borrow_period').val();
+
+            $.ajax({
+                url: '/api/borrow_book',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    book_index: bookIndex,
+                    borrower_name: borrowerName,
+                    borrower_class: borrowerClass,
+                    borrow_date: borrowDate,
+                    borrow_period: borrowPeriod
+                }),
+                success: function(response) {
+                    $('#borrowBookModal').modal('hide');
+                    $('#borrowBookForm')[0].reset();
+                    loadBooks();
+                    alert(response.message);
+                },
+                error: function(error) {
+                    alert('Error borrowing book.');
+                }
+            });
+        }
+
+        function returnBook() {
+            const returnerName = $('#returner_name').val();
+            const returnBookId = $('#return_book_id').val();
+
+            $.ajax({
+                url: '/api/return_book',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    returner_name: returnerName,
+                    book_id: returnBookId
+                }),
+                success: function(response) {
+                    $('#returnBookModal').modal('hide');
+                    $('#returnBookForm')[0].reset();
+                    loadBooks();
+                    alert(response.message);
+                },
+                error: function(error) {
+                    alert('Error returning book.');
+                }
+            });
+        }
+
+        function logout() {
+            window.location.href = '/logout';
+        }
+    </script>
+</body>
+</html>
